@@ -273,7 +273,12 @@ public class HangmanController implements FileController {
             File selectedFile = filechooser.showOpenDialog(appTemplate.getGUI().getWindow());
             if (selectedFile != null && selectedFile.exists())
                 load(selectedFile.toPath());
-            restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
+            try{
+                restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
+            }
+            catch (Exception exc){
+
+            }
         }
     }
 
