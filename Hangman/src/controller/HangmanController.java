@@ -114,7 +114,6 @@ public class HangmanController implements FileController {
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
         initWordGraphics(guessedLetters);
-        drawBox(guessedLetters);
         play();
     }
 
@@ -137,6 +136,8 @@ public class HangmanController implements FileController {
     }
 
     private void initWordGraphics(HBox guessedLetters) {
+        AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
+        PropertyManager           manager    = PropertyManager.getManager();
         char[] targetword = gamedata.getTargetWord().toCharArray();
         progress = new Text[targetword.length];
         for (int i = 0; i < progress.length; i++) {
@@ -145,14 +146,14 @@ public class HangmanController implements FileController {
             progress[i].setVisible(false);
         }
         guessedLetters.getChildren().addAll(progress);
+        drawBox(guessedLetters);
     }
 
     private void drawBox(Pane guessedLetters){
         String word = gamedata.getTargetWord().toString();
         System.out.println(gamedata.getTargetWord().toString());
         StackPane pn;
-
-
+        if(progress==null) throw new NullPointerException("Error rendering graphics");
         for(int i = 0; i< word.length(); i++){
             pn = new StackPane();
             pn.setPadding(new Insets(5, 5, 5, 5));
@@ -161,16 +162,6 @@ public class HangmanController implements FileController {
             pn.getChildren().addAll(r, progress[i]);
             guessedLetters.getChildren().add(pn);
         }
-
-
-        /*Text t =  new Text();
-        t.setFont(new Font(30));
-        t.setBoundsType(TextBoundsType.VISUAL);
-        guessedLetters.getChildren().add(t)*/;
-
-        //pn.getChildren().addAll(r, t);
-        //guessedLetters.getChildren().add(pn);
-
     }
 
     public void play() {
@@ -235,10 +226,12 @@ public class HangmanController implements FileController {
         for (int i = 0; i < progress.length; i++) {
             progress[i] = new Text(Character.toString(targetword[i]));
             progress[i].setVisible(gamedata.getGoodGuesses().contains(progress[i].getText().charAt(0)));
+            progress[i].setFont(new Font(20));
             if (progress[i].isVisible())
                 discovered++;
         }
         guessedLetters.getChildren().addAll(progress);
+        drawBox(guessedLetters);
     }
 
     private boolean alreadyGuessed(char c) {
@@ -300,6 +293,7 @@ public class HangmanController implements FileController {
             load = promptToSave();
         if (load) {
             PropertyManager propertyManager = PropertyManager.getManager();
+            AppMessageDialogSingleton messageDialog   = AppMessageDialogSingleton.getSingleton();
             FileChooser     filechooser     = new FileChooser();
             Path            appDirPath      = Paths.get(propertyManager.getPropertyValue(APP_TITLE)).toAbsolutePath();
             Path            targetPath      = appDirPath.resolve(APP_WORKDIR_PATH.getParameter());
@@ -311,9 +305,14 @@ public class HangmanController implements FileController {
                                                             String.format("*.%s", extension));
             filechooser.getExtensionFilters().add(extFilter);
             File selectedFile = filechooser.showOpenDialog(appTemplate.getGUI().getWindow());
-            if (selectedFile != null && selectedFile.exists()){
+            if (selectedFile != null && selectedFile.exists()) {
                 load(selectedFile.toPath());
-                restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
+                try {
+                    restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
+                }
+                catch (NullPointerException e){
+                    messageDialog.show(propertyManager.getPropertyValue(LOAD_ERROR_TITLE), propertyManager.getPropertyValue(LOAD_ERROR_MESSAGE));
+                }
             }
         }
     }
