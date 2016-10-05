@@ -9,10 +9,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import propertymanager.PropertyManager;
 import ui.AppGUI;
 
@@ -40,6 +37,7 @@ public class Workspace extends AppWorkspaceComponent {
     HBox              remainingGuessBox; // container to display the number of remaining guesses
     Button            startGame;         // the button to start playing a game of Hangman
     HangmanController controller;
+    HBox              allLetter;
 
     /**
      * Constructor for initializing the workspace, note that this constructor
@@ -65,6 +63,9 @@ public class Workspace extends AppWorkspaceComponent {
         headPane.getChildren().add(guiHeadingLabel);
         headPane.setAlignment(Pos.CENTER);
 
+        allLetter = new HBox();
+
+
         figurePane = new BorderPane();
         guessedLetters = new HBox();
         guessedLetters.setStyle("-fx-background-color: transparent;");
@@ -83,8 +84,11 @@ public class Workspace extends AppWorkspaceComponent {
         HBox.setHgrow(blankBoxRight, Priority.ALWAYS);
         footToolbar = new ToolBar(blankBoxLeft, startGame, blankBoxRight);
 
+        allLetter = new HBox();
+        allLetter.setAlignment(Pos.CENTER_LEFT);
+
         workspace = new VBox();
-        workspace.getChildren().addAll(headPane, bodyPane, footToolbar);
+        workspace.getChildren().addAll(headPane, bodyPane, footToolbar, allLetter);
     }
 
     private void setupHandlers() {
@@ -120,6 +124,10 @@ public class Workspace extends AppWorkspaceComponent {
 
     public VBox getGameTextsPane() {
         return gameTextsPane;
+    }
+
+    public HBox getAllLetterBox(){
+        return allLetter;
     }
 
     public HBox getRemainingGuessBox() {

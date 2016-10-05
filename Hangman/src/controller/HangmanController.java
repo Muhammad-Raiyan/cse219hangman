@@ -9,6 +9,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -57,6 +58,7 @@ public class HangmanController implements FileController {
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private Path        workFile;
     private Rectangle r;
+    private Text[] letter;
 
     public HangmanController(AppTemplate appTemplate, Button gameButton) {
         this(appTemplate);
@@ -111,9 +113,11 @@ public class HangmanController implements FileController {
         setGameState(GameState.INITIALIZED_UNMODIFIED);
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
         HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
+        HBox alphabet = gameWorkspace.getAllLetterBox();
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
         initWordGraphics(guessedLetters);
+        drawLetterList(alphabet);
         play();
     }
 
@@ -149,6 +153,24 @@ public class HangmanController implements FileController {
         drawBox(guessedLetters);
     }
 
+    private void drawLetterList(HBox alphabet){
+        //Text[] let = new Text[26];
+        //alphabet.getChildren().add(let);
+
+        letter = new Text[26];
+        /*Rectangle box = new Rectangle(20, 20);
+        box.setFill(Color.WHITE);*/
+        for(int i=0; i<26; i++){
+            char temp = (char) ('A' + i);
+            letter[i] = new Text(Character.toString(temp));
+            letter[i].setFont(new Font(15));
+            letter[i].setVisible(false);
+            alphabet.getChildren().add(letter[i]);
+        }
+
+        //alphabet.add(new Text("A"), 1, 0);
+    }
+
     private void drawBox(Pane guessedLetters){
         String word = gamedata.getTargetWord().toString();
         System.out.println(gamedata.getTargetWord().toString());
@@ -174,6 +196,8 @@ public class HangmanController implements FileController {
                     char guess = event.getCharacter().charAt(0);
                     if (!alreadyGuessed(guess)) {
                         boolean goodguess = false;
+                        int ind = Character.toUpperCase(guess) - 'A';
+                        letter[ind].setVisible(true);
                         for (int i = 0; i < progress.length; i++) {
                             if (gamedata.getTargetWord().charAt(i) == guess) {
                                 progress[i].setVisible(true);
