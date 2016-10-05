@@ -113,8 +113,8 @@ public class HangmanController implements FileController {
         HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
-        drawBox(guessedLetters);
         initWordGraphics(guessedLetters);
+        drawBox(guessedLetters);
         play();
     }
 
@@ -141,28 +141,24 @@ public class HangmanController implements FileController {
         progress = new Text[targetword.length];
         for (int i = 0; i < progress.length; i++) {
             progress[i] = new Text(Character.toString(targetword[i]));
+            progress[i].setFont(new Font(20));
             progress[i].setVisible(false);
         }
         guessedLetters.getChildren().addAll(progress);
     }
 
     private void drawBox(Pane guessedLetters){
-        int num = gamedata.getTargetWord().toString().length();
+        String word = gamedata.getTargetWord().toString();
         System.out.println(gamedata.getTargetWord().toString());
         StackPane pn;
-        Text t = new Text();
-        //Map<Text> s = new HashMap();
-        for(int i = 0; i< num; i++){
+
+
+        for(int i = 0; i< word.length(); i++){
             pn = new StackPane();
             pn.setPadding(new Insets(5, 5, 5, 5));
             r = new Rectangle(25 , 25, Color.WHITE);
             r.setStroke(Color.BLACK);
-
-            //t =  new Text();
-            t.setFont(new Font(30));
-            t.setBoundsType(TextBoundsType.VISUAL);
-
-            pn.getChildren().addAll(r, t);
+            pn.getChildren().addAll(r, progress[i]);
             guessedLetters.getChildren().add(pn);
         }
 
