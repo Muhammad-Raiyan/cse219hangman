@@ -1,6 +1,7 @@
 package controller;
 
 import apptemplate.AppTemplate;
+import com.sun.org.apache.xpath.internal.SourceTree;
 import data.GameData;
 import gui.Workspace;
 import javafx.animation.AnimationTimer;
@@ -147,22 +148,25 @@ public class HangmanController implements FileController {
     }
 
     private void drawBox(Pane guessedLetters){
-        int num = gamedata.getTargetWord().toString().length();
+        String word = gamedata.getTargetWord().toString();
         System.out.println(gamedata.getTargetWord().toString());
         StackPane pn;
-        Text t = new Text();
-        //Map<Text> s = new HashMap();
-        for(int i = 0; i< num; i++){
+        Text[] t = new Text[word.length()];
+        for(int i = 0; i< word.length(); i++){
             pn = new StackPane();
             pn.setPadding(new Insets(5, 5, 5, 5));
             r = new Rectangle(25 , 25, Color.WHITE);
             r.setStroke(Color.BLACK);
 
+            //System.out.println(Character.toString(word.charAt(i)));
             //t =  new Text();
-            t.setFont(new Font(30));
-            t.setBoundsType(TextBoundsType.VISUAL);
+            String a = Character.toString(word.charAt(i));
+            t[0].setText("a");
+            System.out.println(t[i].getText());
+            t[i].setFont(new Font(30));
+            t[i].setBoundsType(TextBoundsType.VISUAL);
 
-            pn.getChildren().addAll(r, t);
+            pn.getChildren().addAll(r, t[i]);
             guessedLetters.getChildren().add(pn);
         }
 
