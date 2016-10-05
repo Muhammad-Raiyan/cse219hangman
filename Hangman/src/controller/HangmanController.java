@@ -5,11 +5,18 @@ import data.GameData;
 import gui.Workspace;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextBoundsType;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import propertymanager.PropertyManager;
@@ -20,6 +27,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static settings.AppPropertyType.*;
 import static settings.InitializationParameters.APP_WORKDIR_PATH;
@@ -45,6 +56,7 @@ public class HangmanController implements FileController {
     private Button      gameButton;  // shared reference to the "start game" button
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private Path        workFile;
+    private Rectangle r;
 
     public HangmanController(AppTemplate appTemplate, Button gameButton) {
         this(appTemplate);
@@ -101,6 +113,7 @@ public class HangmanController implements FileController {
         HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
+        drawBox(guessedLetters);
         initWordGraphics(guessedLetters);
         play();
     }
@@ -131,6 +144,37 @@ public class HangmanController implements FileController {
             progress[i].setVisible(false);
         }
         guessedLetters.getChildren().addAll(progress);
+    }
+
+    private void drawBox(Pane guessedLetters){
+        int num = gamedata.getTargetWord().toString().length();
+        System.out.println(gamedata.getTargetWord().toString());
+        StackPane pn;
+        Text t = new Text();
+        //Map<Text> s = new HashMap();
+        for(int i = 0; i< num; i++){
+            pn = new StackPane();
+            pn.setPadding(new Insets(5, 5, 5, 5));
+            r = new Rectangle(25 , 25, Color.WHITE);
+            r.setStroke(Color.BLACK);
+
+            //t =  new Text();
+            t.setFont(new Font(30));
+            t.setBoundsType(TextBoundsType.VISUAL);
+
+            pn.getChildren().addAll(r, t);
+            guessedLetters.getChildren().add(pn);
+        }
+
+
+        /*Text t =  new Text();
+        t.setFont(new Font(30));
+        t.setBoundsType(TextBoundsType.VISUAL);
+        guessedLetters.getChildren().add(t)*/;
+
+        //pn.getChildren().addAll(r, t);
+        //guessedLetters.getChildren().add(pn);
+
     }
 
     public void play() {
