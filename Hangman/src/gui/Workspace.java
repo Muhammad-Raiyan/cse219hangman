@@ -38,6 +38,7 @@ public class Workspace extends AppWorkspaceComponent {
     Button            startGame;         // the button to start playing a game of Hangman
     HangmanController controller;
     BorderPane        layout;
+    FlowPane          allLetter;
 
     /**
      * Constructor for initializing the workspace, note that this constructor
@@ -63,15 +64,20 @@ public class Workspace extends AppWorkspaceComponent {
         headPane.getChildren().add(guiHeadingLabel);
         headPane.setAlignment(Pos.CENTER);
 
+        allLetter = new FlowPane();
+        for(int i = 0; i<26; i++){
+            char temp = (char) ('A' + i);
+            allLetter.getChildren().add(new Button(Character.toString(temp)));
+        }
+
+
         figurePane = new BorderPane();
         guessedLetters = new HBox();
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
-        //HBox.setHgrow(remainingGuessBox, Priority.ALWAYS);
-
         gameTextsPane = new VBox();
+        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, allLetter);
 
-        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters);
         bodyPane = new HBox();
         bodyPane.getChildren().addAll(figurePane, gameTextsPane);
 
@@ -86,16 +92,10 @@ public class Workspace extends AppWorkspaceComponent {
         layout.setBottom(footToolbar);
         layout.setRight(bodyPane);
         layout.setTop(headPane);
-        /*BorderPane.setAlignment(footToolbar, Pos.BOTTOM_CENTER);
-        BorderPane.setAlignment(bodyPane, Pos.CENTER_RIGHT);
-        BorderPane.setAlignment(headPane, Pos.TOP_CENTER);*/
 
         workspace = new VBox();
         workspace.getChildren().add(layout);
         VBox.setVgrow(layout, Priority.ALWAYS);
-        //workspace.getChildren().addAll(headPane, bodyPane, footToolbar);
-
-        //workspace.getChildren().addAll(headPane, bodyPane, footToolbar);
     }
 
     private void setupHandlers() {
@@ -131,6 +131,10 @@ public class Workspace extends AppWorkspaceComponent {
 
     public VBox getGameTextsPane() {
         return gameTextsPane;
+    }
+
+    public FlowPane getAllLetterBox(){
+        return allLetter;
     }
 
     public HBox getRemainingGuessBox() {
