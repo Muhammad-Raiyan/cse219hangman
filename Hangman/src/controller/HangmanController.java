@@ -22,8 +22,10 @@ import ui.YesNoCancelDialogSingleton;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Random;
 
 import static settings.AppPropertyType.*;
 import static settings.InitializationParameters.APP_WORKDIR_PATH;
@@ -49,6 +51,7 @@ public class HangmanController implements FileController {
     private Button      gameButton;  // shared reference to the "start game" button
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private Path        workFile;
+    private Button      hintButton;
     private Rectangle r;
     private Text[] letter;
 
@@ -104,8 +107,12 @@ public class HangmanController implements FileController {
         gamedata.init();
         setGameState(GameState.INITIALIZED_UNMODIFIED);
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
-        HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
+        FlowPane guessedLetters    = (FlowPane) gameWorkspace.getGameTextsPane().getChildren().get(1);
         FlowPane alphabet = gameWorkspace.getAllLetterBox();
+        hintButton = gameWorkspace.getHint();
+        gameWorkspace.getGameTextsPane().getChildren().add(hintButton);
+        if(gamedata.getTargetWord().length()<8) hintButton.setVisible(false);
+        else    hintButton.setVisible(true);
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
         initWordGraphics(guessedLetters);
@@ -129,44 +136,6 @@ public class HangmanController implements FileController {
             else
                 dialog.show(manager.getPropertyValue(GAME_OVER_TITLE), endMessage);
         });
-    }
-
-    private void initWordGraphics(HBox guessedLetters) {
-        AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
-        PropertyManager           manager    = PropertyManager.getManager();
-        char[] targetword = gamedata.getTargetWord().toCharArray();
-        progress = new Text[targetword.length];
-        for (int i = 0; i < progress.length; i++) {
-            progress[i] = new Text(Character.toString(targetword[i]));
-            progress[i].setFont(new Font(20));
-            progress[i].setVisible(false);
-        }
-        guessedLetters.getChildren().addAll(progress);
-        drawBox(guessedLetters);
-    }
-
-    private void drawLetterList(FlowPane alphabet){
-
-        for(int i=0; i<26; i++){
-            char temp = (char) ('A' + i);
-            alphabet.getChildren().add(new Button(Character.toString(temp)));
-        }
-
-    }
-
-    private void drawBox(Pane guessedLetters){
-        String word = gamedata.getTargetWord().toString();
-        System.out.println(gamedata.getTargetWord().toString());
-        StackPane pn;
-        if(progress==null) throw new NullPointerException("Error rendering graphics");
-        for(int i = 0; i< word.length(); i++){
-            pn = new StackPane();
-            pn.setPadding(new Insets(5, 5, 5, 5));
-            r = new Rectangle(25 , 25, Color.WHITE);
-            r.setStroke(Color.BLACK);
-            pn.getChildren().addAll(r, progress[i]);
-            guessedLetters.getChildren().add(pn);
-        }
     }
 
     public void play() {
@@ -208,23 +177,90 @@ public class HangmanController implements FileController {
         timer.start();
     }
 
+    public void giveHint() {
+        hintButton.setDisable(true);
+        setGameState(GameState.INITIALIZED_MODIFIED);
+        char guess = selectAChar().charAt(0);
+        for (int i = 0; i < progress.length; i++) {
+            if (gamedata.getTargetWord().charAt(i) == guess) {
+                progress[i].setVisible(true);
+                gamedata.addGoodGuess(guess);
+                discovered++;
+            }
+        }
+
+    }
+
+    public String selectAChar(){
+        Random random = new Random();
+        String letter = null;
+        while(letter == null){
+            int index = random.nextInt(gamedata.getTargetWord().length());
+            letter = Character.toString(gamedata.getTargetWord().charAt(index));
+            if(gamedata.getGoodGuesses().contains(letter.charAt(0))) letter = null;
+        }
+
+        return letter;
+    }
+
+    private void initWordGraphics(FlowPane guessedLetters) {
+        AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
+        PropertyManager           manager    = PropertyManager.getManager();
+        char[] targetword = gamedata.getTargetWord().toCharArray();
+        progress = new Text[targetword.length];
+        for (int i = 0; i < progress.length; i++) {
+            progress[i] = new Text(Character.toString(targetword[i]));
+            progress[i].setFont(new Font(20));
+            progress[i].setVisible(false);
+        }
+        guessedLetters.getChildren().addAll(progress);
+        drawBox(guessedLetters);
+    }
+
+    private void drawLetterList(FlowPane alphabet){
+
+        for(int i=0; i<26; i++){
+            char temp = (char) ('A' + i);
+            alphabet.getChildren().add(new Button(Character.toString(temp)));
+        }
+
+    }
+
+    private void drawBox(Pane guessedLetters){
+        String word = gamedata.getTargetWord().toString();
+        System.out.println(gamedata.getTargetWord().toString());
+        StackPane pn;
+        if(progress==null) throw new NullPointerException("Error rendering graphics");
+        for(int i = 0; i< word.length(); i++){
+            pn = new StackPane();
+            pn.setPadding(new Insets(5, 5, 5, 5));
+            r = new Rectangle(25 , 25, Color.WHITE);
+            r.setStroke(Color.BLACK);
+            pn.getChildren().addAll(r, progress[i]);
+            guessedLetters.getChildren().add(pn);
+        }
+    }
+
     private void restoreGUI() {
         disableGameButton();
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
         gameWorkspace.reinitialize();
 
-        HBox guessedLetters = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
+        FlowPane guessedLetters = (FlowPane) gameWorkspace.getGameTextsPane().getChildren().get(1);
         restoreWordGraphics(guessedLetters);
 
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
         remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
-
+        hintButton = gameWorkspace.getHint();
+        gameWorkspace.getGameTextsPane().getChildren().add(hintButton);
+        if(gamedata.getTargetWord().length()<8) hintButton.setVisible(false);
+        else    hintButton.setVisible(true);
         success = false;
         play();
     }
 
-    private void restoreWordGraphics(HBox guessedLetters) {
+    private void restoreWordGraphics(FlowPane guessedLetters) {
         discovered = 0;
         char[] targetword = gamedata.getTargetWord().toCharArray();
         progress = new Text[targetword.length];

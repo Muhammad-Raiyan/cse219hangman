@@ -33,12 +33,13 @@ public class Workspace extends AppWorkspaceComponent {
     ToolBar           footToolbar;       // toolbar for game buttons
     BorderPane        figurePane;        // container to display the namesake graphic of the (potentially) hanging person
     VBox              gameTextsPane;     // container to display the text-related parts of the game
-    HBox              guessedLetters;    // text area displaying all the letters guessed so far
+    FlowPane          guessedLetters;    // text area displaying all the letters guessed so far
     HBox              remainingGuessBox; // container to display the number of remaining guesses
     Button            startGame;         // the button to start playing a game of Hangman
     HangmanController controller;
     BorderPane        layout;
     FlowPane          allLetter;
+    Button            hint;
 
     /**
      * Constructor for initializing the workspace, note that this constructor
@@ -72,11 +73,12 @@ public class Workspace extends AppWorkspaceComponent {
 
 
         figurePane = new BorderPane();
-        guessedLetters = new HBox();
+        guessedLetters = new FlowPane();
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
         gameTextsPane = new VBox();
-        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, allLetter);
+        hint = new Button("Hint");
+        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, hint);
 
         bodyPane = new HBox();
         bodyPane.getChildren().addAll(figurePane, gameTextsPane);
@@ -100,6 +102,7 @@ public class Workspace extends AppWorkspaceComponent {
 
     private void setupHandlers() {
         startGame.setOnMouseClicked(e -> controller.start());
+        hint.setOnMouseClicked(e -> controller.giveHint());
     }
 
     /**
@@ -145,8 +148,12 @@ public class Workspace extends AppWorkspaceComponent {
         return startGame;
     }
 
+    public Button getHint(){
+        return hint;
+    }
+
     public void reinitialize() {
-        guessedLetters = new HBox();
+        guessedLetters = new FlowPane();
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
         gameTextsPane = new VBox();
