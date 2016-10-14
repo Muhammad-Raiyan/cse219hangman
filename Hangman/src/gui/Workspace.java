@@ -102,7 +102,7 @@ public class Workspace extends AppWorkspaceComponent {
 
     private void setupHandlers() {
         startGame.setOnMouseClicked(e -> controller.start());
-        //hint.setOnMouseClicked(e -> controller.giveHint());
+        hint.setOnMouseClicked(e -> controller.giveHint());
     }
 
     /**

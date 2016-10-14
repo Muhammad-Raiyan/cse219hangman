@@ -26,7 +26,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import static settings.AppPropertyType.*;
 import static settings.InitializationParameters.APP_WORKDIR_PATH;
@@ -114,7 +117,7 @@ public class HangmanController implements FileController {
         hintButton.setDisable(false);
         gamedata.setHintState(false);
         gameWorkspace.getGameTextsPane().getChildren().add(hintButton);
-        if(gamedata.getTargetWord().length()<8) hintButton.setVisible(false);
+        if(!isHintable()) hintButton.setVisible(false);
         else    hintButton.setVisible(true);
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
@@ -217,6 +220,14 @@ public class HangmanController implements FileController {
         return letter;
     }
 
+    public boolean isHintable(){
+        Set<Character> word = new HashSet<>();
+        char[] test = gamedata.getTargetWord().toCharArray();
+        for(Character c: test){
+            word.add(c);
+        }
+        return word.size()>gamedata.HINT_THRESHOLD? true:false;
+    }
     private void initWordGraphics(FlowPane guessedLetters) {
         AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
         PropertyManager           manager    = PropertyManager.getManager();
@@ -272,7 +283,7 @@ public class HangmanController implements FileController {
             hintButton.setDisable(true);
             hintButton.setVisible(true);
         }
-        else if(gamedata.getTargetWord().length()>gamedata.HINT_THRESHOLD){
+        else if(isHintable()){
             hintButton.setDisable(false);
             hintButton.setVisible(true);
         }
