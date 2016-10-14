@@ -1,6 +1,7 @@
 package controller;
 
 import apptemplate.AppTemplate;
+import com.sun.org.apache.xpath.internal.SourceTree;
 import data.GameData;
 import gui.Workspace;
 import javafx.animation.AnimationTimer;
@@ -9,7 +10,6 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -58,7 +58,6 @@ public class HangmanController implements FileController {
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private Path        workFile;
     private Rectangle r;
-    private Text[] letter;
 
     public HangmanController(AppTemplate appTemplate, Button gameButton) {
         this(appTemplate);
@@ -113,11 +112,10 @@ public class HangmanController implements FileController {
         setGameState(GameState.INITIALIZED_UNMODIFIED);
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
         HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
-        HBox alphabet = gameWorkspace.getAllLetterBox();
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
+        drawBox(guessedLetters);
         initWordGraphics(guessedLetters);
-        drawLetterList(alphabet);
         play();
     }
 
@@ -140,50 +138,47 @@ public class HangmanController implements FileController {
     }
 
     private void initWordGraphics(HBox guessedLetters) {
-        AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
-        PropertyManager           manager    = PropertyManager.getManager();
         char[] targetword = gamedata.getTargetWord().toCharArray();
         progress = new Text[targetword.length];
         for (int i = 0; i < progress.length; i++) {
             progress[i] = new Text(Character.toString(targetword[i]));
-            progress[i].setFont(new Font(20));
             progress[i].setVisible(false);
         }
         guessedLetters.getChildren().addAll(progress);
-        drawBox(guessedLetters);
-    }
-
-    private void drawLetterList(HBox alphabet){
-        //Text[] let = new Text[26];
-        //alphabet.getChildren().add(let);
-
-        letter = new Text[26];
-        /*Rectangle box = new Rectangle(20, 20);
-        box.setFill(Color.WHITE);*/
-        for(int i=0; i<26; i++){
-            char temp = (char) ('A' + i);
-            letter[i] = new Text(Character.toString(temp));
-            letter[i].setFont(new Font(15));
-            letter[i].setVisible(false);
-            alphabet.getChildren().add(letter[i]);
-        }
-
-        //alphabet.add(new Text("A"), 1, 0);
     }
 
     private void drawBox(Pane guessedLetters){
         String word = gamedata.getTargetWord().toString();
         System.out.println(gamedata.getTargetWord().toString());
         StackPane pn;
-        if(progress==null) throw new NullPointerException("Error rendering graphics");
+        Text[] t = new Text[word.length()];
         for(int i = 0; i< word.length(); i++){
             pn = new StackPane();
             pn.setPadding(new Insets(5, 5, 5, 5));
             r = new Rectangle(25 , 25, Color.WHITE);
             r.setStroke(Color.BLACK);
-            pn.getChildren().addAll(r, progress[i]);
+
+            //System.out.println(Character.toString(word.charAt(i)));
+            //t =  new Text();
+            String a = Character.toString(word.charAt(i));
+            t[0].setText("a");
+            System.out.println(t[i].getText());
+            t[i].setFont(new Font(30));
+            t[i].setBoundsType(TextBoundsType.VISUAL);
+
+            pn.getChildren().addAll(r, t[i]);
             guessedLetters.getChildren().add(pn);
         }
+
+
+        /*Text t =  new Text();
+        t.setFont(new Font(30));
+        t.setBoundsType(TextBoundsType.VISUAL);
+        guessedLetters.getChildren().add(t)*/;
+
+        //pn.getChildren().addAll(r, t);
+        //guessedLetters.getChildren().add(pn);
+
     }
 
     public void play() {
@@ -196,8 +191,6 @@ public class HangmanController implements FileController {
                     char guess = event.getCharacter().charAt(0);
                     if (!alreadyGuessed(guess)) {
                         boolean goodguess = false;
-                        int ind = Character.toUpperCase(guess) - 'A';
-                        letter[ind].setVisible(true);
                         for (int i = 0; i < progress.length; i++) {
                             if (gamedata.getTargetWord().charAt(i) == guess) {
                                 progress[i].setVisible(true);
@@ -250,12 +243,10 @@ public class HangmanController implements FileController {
         for (int i = 0; i < progress.length; i++) {
             progress[i] = new Text(Character.toString(targetword[i]));
             progress[i].setVisible(gamedata.getGoodGuesses().contains(progress[i].getText().charAt(0)));
-            progress[i].setFont(new Font(20));
             if (progress[i].isVisible())
                 discovered++;
         }
         guessedLetters.getChildren().addAll(progress);
-        drawBox(guessedLetters);
     }
 
     private boolean alreadyGuessed(char c) {
@@ -317,7 +308,6 @@ public class HangmanController implements FileController {
             load = promptToSave();
         if (load) {
             PropertyManager propertyManager = PropertyManager.getManager();
-            AppMessageDialogSingleton messageDialog   = AppMessageDialogSingleton.getSingleton();
             FileChooser     filechooser     = new FileChooser();
             Path            appDirPath      = Paths.get(propertyManager.getPropertyValue(APP_TITLE)).toAbsolutePath();
             Path            targetPath      = appDirPath.resolve(APP_WORKDIR_PATH.getParameter());
@@ -329,14 +319,9 @@ public class HangmanController implements FileController {
                                                             String.format("*.%s", extension));
             filechooser.getExtensionFilters().add(extFilter);
             File selectedFile = filechooser.showOpenDialog(appTemplate.getGUI().getWindow());
-            if (selectedFile != null && selectedFile.exists()) {
+            if (selectedFile != null && selectedFile.exists()){
                 load(selectedFile.toPath());
-                try {
-                    restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
-                }
-                catch (NullPointerException e){
-                    messageDialog.show(propertyManager.getPropertyValue(LOAD_ERROR_TITLE), propertyManager.getPropertyValue(LOAD_ERROR_MESSAGE));
-                }
+                restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
             }
         }
     }
