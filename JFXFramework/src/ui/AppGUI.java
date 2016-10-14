@@ -213,6 +213,7 @@ public class AppGUI implements AppStyleArbiter {
      */
     @Override
     public void initStyle() {
+        primaryStage.setResizable(false);
         // currently, we do not provide any stylization at the framework-level
     }
 }

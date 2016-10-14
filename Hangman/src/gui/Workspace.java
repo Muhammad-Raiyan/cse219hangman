@@ -6,10 +6,15 @@ import controller.HangmanController;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import propertymanager.PropertyManager;
 import ui.AppGUI;
 
@@ -80,9 +85,11 @@ public class Workspace extends AppWorkspaceComponent {
         hint = new Button("Hint");
         gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, hint);
 
-        bodyPane = new HBox();
-        bodyPane.getChildren().addAll(figurePane, gameTextsPane);
 
+        /*bodyPane = new HBox();
+        bodyPane.getChildren().addAll(gameTextsPane);
+        */
+        drawHangman();
         startGame = new Button("Start Playing");
         HBox blankBoxLeft  = new HBox();
         HBox blankBoxRight = new HBox();
@@ -92,12 +99,24 @@ public class Workspace extends AppWorkspaceComponent {
 
         layout = new BorderPane();
         layout.setBottom(footToolbar);
-        layout.setRight(bodyPane);
+        layout.setRight(gameTextsPane);
+        layout.setLeft(figurePane);
         layout.setTop(headPane);
 
         workspace = new VBox();
         workspace.getChildren().addAll(layout);
         VBox.setVgrow(layout, Priority.ALWAYS);
+    }
+
+    private void drawHangman(){
+        Canvas canvas = new Canvas(550, 600);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setFill(Color.GREEN);
+        gc.setStroke(Color.BLUE);
+        gc.setLineWidth(5);
+        gc.strokeLine(40, 10, 10, 40);
+        Rectangle r = new Rectangle(550, 600);
+        figurePane.setLeft(canvas);
     }
 
     private void setupHandlers() {
@@ -158,6 +177,6 @@ public class Workspace extends AppWorkspaceComponent {
         remainingGuessBox = new HBox();
         gameTextsPane = new VBox();
         gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters);
-        bodyPane.getChildren().setAll(figurePane, gameTextsPane);
+        layout.setRight(gameTextsPane);
     }
 }
