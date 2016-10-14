@@ -158,7 +158,7 @@ public class HangmanController implements FileController {
                 appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
                 appTemplate.getGUI().getPrimaryScene().setOnKeyTyped((KeyEvent event) -> {
                     char guess = Character.toLowerCase(event.getCharacter().charAt(0));
-                    if (!alreadyGuessed(guess)) {
+                    if (!alreadyGuessed(guess) && isValid(guess)) {
                         boolean goodguess = false;
                         for (int i = 0; i < progress.length; i++) {
                             if (gamedata.getTargetWord().charAt(i) == guess) {
@@ -191,6 +191,12 @@ public class HangmanController implements FileController {
             }
         };
         timer.start();
+    }
+
+    public boolean isValid(char c){
+        if(c >= 'a' && c<='z')
+            return true;
+        else return false;
     }
 
     public void giveHint() {
@@ -466,6 +472,4 @@ public class HangmanController implements FileController {
         gameworkspace.reinitialize();
         gamedata = (GameData) appTemplate.getDataComponent();
     }
-
-
 }
