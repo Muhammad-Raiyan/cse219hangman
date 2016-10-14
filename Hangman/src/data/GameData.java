@@ -120,8 +120,8 @@ public class GameData implements AppDataComponent {
         }
     }
 
-    public void reduceRemainingGuess(){
-        remainingGuesses--;
+    public void setRemainingGuess(int num){
+        remainingGuesses = num;
     }
 
     public boolean getHintIsUsed(){

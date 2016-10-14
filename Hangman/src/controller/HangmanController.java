@@ -9,6 +9,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -24,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -52,9 +54,9 @@ public class HangmanController implements FileController {
     private Button      gameButton;  // shared reference to the "start game" button
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private Path        workFile;
-    private Button      hintButton;
     private Rectangle   r;
-    private Text[] letter;
+    private Button      hintButton;
+    private HashMap<String, Text> alphabets;
 
     public HangmanController(AppTemplate appTemplate, Button gameButton) {
         this(appTemplate);
@@ -106,19 +108,18 @@ public class HangmanController implements FileController {
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
         gamedata.init();
         setGameState(GameState.INITIALIZED_UNMODIFIED);
-        HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
+        HBox remainingGuessBox = (HBox)gameWorkspace.getGameTextsPane().getChildren().get(0);
         FlowPane guessedLetters    = (FlowPane) gameWorkspace.getGameTextsPane().getChildren().get(1);
-        FlowPane alphabet = gameWorkspace.getAllLetterBox();
-        hintButton = gameWorkspace.getHint();
+        //FlowPane alphabet = (FlowPane) gameWorkspace.getGameTextsPane().getChildren().get(3);
+        hintButton = (Button) gameWorkspace.getGameTextsPane().getChildren().get(2);
         hintButton.setDisable(false);
         gamedata.setHintState(false);
-        gameWorkspace.getGameTextsPane().getChildren().add(hintButton);
         if(!isHintable()) hintButton.setVisible(false);
         else    hintButton.setVisible(true);
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
         initWordGraphics(guessedLetters);
-        drawLetterList(alphabet);
+        //drawLetterList(alphabet);
         play();
     }
 
@@ -168,8 +169,7 @@ public class HangmanController implements FileController {
                         }
                         if (!goodguess) {
                             gamedata.addBadGuess(guess);
-                                Workspace word = (Workspace) appTemplate.getWorkspaceComponent();
-                                word.drawHangman(10-gamedata.getRemainingGuesses());
+                            gameWorkspace.drawHangman(10-gamedata.getRemainingGuesses());
 
                         }
 
@@ -177,6 +177,10 @@ public class HangmanController implements FileController {
                         remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
                     }
                     setGameState(GameState.INITIALIZED_MODIFIED);
+                });
+                gameWorkspace.getHint().setOnMouseClicked((MouseEvent event) ->{
+
+                    giveHint();
                 });
                 if (gamedata.getRemainingGuesses() <= 0 || success)
                     stop();
@@ -197,7 +201,7 @@ public class HangmanController implements FileController {
         else return false;
     }
 
-    public void giveHint() {
+    public synchronized void giveHint() {
         hintButton.setDisable(true);
         gamedata.setHintState(true);
         setGameState(GameState.INITIALIZED_MODIFIED);
@@ -209,7 +213,6 @@ public class HangmanController implements FileController {
                 discovered++;
             }
         }
-        //gamedata.reduceRemainingGuess();
     }
 
     public String selectAChar(){
@@ -247,11 +250,11 @@ public class HangmanController implements FileController {
     }
 
     private void drawLetterList(FlowPane alphabet){
+        StackPane pn = new StackPane();
+        pn.getChildren().add(new Rectangle(25, 25, Color.GREEN));
+        alphabet.getChildren().addAll(pn);
 
-        for(int i=0; i<26; i++){
-            char temp = (char) ('A' + i);
-            alphabet.getChildren().add(new Button(Character.toString(temp)));
-        }
+        alphabet.setVisible(true);
     }
 
     private void drawBox(Pane guessedLetters){
@@ -280,7 +283,6 @@ public class HangmanController implements FileController {
         remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
         hintButton = gameWorkspace.getHint();
-        gameWorkspace.getGameTextsPane().getChildren().add(hintButton);
         if(gamedata.getHintIsUsed()) {
             hintButton.setDisable(true);
             hintButton.setVisible(true);
@@ -339,7 +341,7 @@ public class HangmanController implements FileController {
             appTemplate.getWorkspaceComponent().reloadWorkspace(); // load data into workspace
             ensureActivatedWorkspace();                            // ensure workspace is activated
             workFile = null;                                       // new workspace has never been saved to a file
-            ((Workspace) appTemplate.getWorkspaceComponent()).reinitialize();
+            gameWorkspace.reinitialize();
             enableGameButton();
             gameWorkspace.clearHangman();
         }

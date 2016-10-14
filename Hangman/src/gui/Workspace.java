@@ -13,12 +13,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
 import propertymanager.PropertyManager;
 import ui.AppGUI;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import static hangman.HangmanProperties.*;
 
@@ -44,6 +43,7 @@ public class Workspace extends AppWorkspaceComponent {
     HangmanController controller;
     BorderPane        layout;
     FlowPane          allLetter;
+    HashMap<String, StackPane> letterBox;
     Button            hint;
     private Canvas canvas;
     private GraphicsContext gc;
@@ -74,32 +74,31 @@ public class Workspace extends AppWorkspaceComponent {
         headPane.getChildren().add(guiHeadingLabel);
         headPane.setAlignment(Pos.CENTER);
 
-        allLetter = new FlowPane();
-        for(int i = 0; i<26; i++){
-            char temp = (char) ('A' + i);
-            allLetter.getChildren().add(new Button(Character.toString(temp)));
-        }
 
+        /*for(int i = 0; i<26; i++){
+            allLetter = new StackPane();
+            String temp =  Character.toString((char) ('A' + i));
+            allLetter.getChildren().addAll(new Rectangle(25, 25, Color.GREEN), new Text(temp));
+            bodyPane.getChildren().add(allLetter);
+        }*/
+        //allLetter.setVisible(true);
 
-        figurePane = new BorderPane();
         guessedLetters = new FlowPane();
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
         gameTextsPane = new VBox();
         hint = new Button("Hint");
-        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, hint);
+        allLetter = new FlowPane();
+        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, hint, allLetter);
 
-
-        /*bodyPane = new HBox();
-        bodyPane.getChildren().addAll(gameTextsPane);
-        */
-        //drawHangman();
         startGame = new Button("Start Playing");
         HBox blankBoxLeft  = new HBox();
         HBox blankBoxRight = new HBox();
         HBox.setHgrow(blankBoxLeft, Priority.ALWAYS);
         HBox.setHgrow(blankBoxRight, Priority.ALWAYS);
         footToolbar = new ToolBar(blankBoxLeft, startGame, blankBoxRight);
+
+        figurePane = new BorderPane();
         figurePane.setLeft(canvas);
 
         layout = new BorderPane();
@@ -200,8 +199,11 @@ public class Workspace extends AppWorkspaceComponent {
         guessedLetters = new FlowPane();
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
+        allLetter = new FlowPane();
+        hint = new Button("Hint");
+        hint.setVisible(false);
         gameTextsPane = new VBox();
-        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters);
+        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, hint, allLetter);
         layout.setRight(gameTextsPane);
     }
 }
