@@ -1,7 +1,6 @@
 package controller;
 
 import apptemplate.AppTemplate;
-import com.sun.org.apache.xpath.internal.SourceTree;
 import data.GameData;
 import gui.Workspace;
 import javafx.animation.AnimationTimer;
@@ -10,14 +9,11 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextBoundsType;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import propertymanager.PropertyManager;
@@ -28,10 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.Random;
 
 import static settings.AppPropertyType.*;
 import static settings.InitializationParameters.APP_WORKDIR_PATH;
@@ -57,7 +50,9 @@ public class HangmanController implements FileController {
     private Button      gameButton;  // shared reference to the "start game" button
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private Path        workFile;
-    private Rectangle r;
+    private Button      hintButton;
+    private Rectangle   r;
+    private Text[] letter;
 
     public HangmanController(AppTemplate appTemplate, Button gameButton) {
         this(appTemplate);
@@ -111,11 +106,17 @@ public class HangmanController implements FileController {
         gamedata.init();
         setGameState(GameState.INITIALIZED_UNMODIFIED);
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
-        HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
+        FlowPane guessedLetters    = (FlowPane) gameWorkspace.getGameTextsPane().getChildren().get(1);
+        FlowPane alphabet = gameWorkspace.getAllLetterBox();
+        hintButton = gameWorkspace.getHint();
+        hintButton.setDisable(false);
+        gameWorkspace.getGameTextsPane().getChildren().add(hintButton);
+        if(gamedata.getTargetWord().length()<8) hintButton.setVisible(false);
+        else    hintButton.setVisible(true);
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
-        drawBox(guessedLetters);
         initWordGraphics(guessedLetters);
+        drawLetterList(alphabet);
         play();
     }
 
@@ -123,64 +124,28 @@ public class HangmanController implements FileController {
         appTemplate.getGUI().getPrimaryScene().setOnKeyTyped(null);
         gameButton.setDisable(true);
         setGameState(GameState.ENDED);
+        fillOutEmptyBoxes();
         appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
         Platform.runLater(() -> {
             PropertyManager           manager    = PropertyManager.getManager();
             AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
             String                    endMessage = manager.getPropertyValue(success ? GAME_WON_MESSAGE : GAME_LOST_MESSAGE);
-            if (!success)
-                endMessage += String.format(" (the word was \"%s\")", gamedata.getTargetWord());
+            /*if (!success)
+                endMessage += String.format(" (the word was \"%s\")", gamedata.getTargetWord());*/
             if (dialog.isShowing())
                 dialog.toFront();
             else
                 dialog.show(manager.getPropertyValue(GAME_OVER_TITLE), endMessage);
         });
     }
-
-    private void initWordGraphics(HBox guessedLetters) {
-        char[] targetword = gamedata.getTargetWord().toCharArray();
-        progress = new Text[targetword.length];
+    public void fillOutEmptyBoxes(){
         for (int i = 0; i < progress.length; i++) {
-            progress[i] = new Text(Character.toString(targetword[i]));
-            progress[i].setVisible(false);
+            if(!progress[i].isVisible()) {
+                progress[i].setVisible(true);
+                progress[i].setFill(Color.RED);
+            }
         }
-        guessedLetters.getChildren().addAll(progress);
     }
-
-    private void drawBox(Pane guessedLetters){
-        String word = gamedata.getTargetWord().toString();
-        System.out.println(gamedata.getTargetWord().toString());
-        StackPane pn;
-        Text[] t = new Text[word.length()];
-        for(int i = 0; i< word.length(); i++){
-            pn = new StackPane();
-            pn.setPadding(new Insets(5, 5, 5, 5));
-            r = new Rectangle(25 , 25, Color.WHITE);
-            r.setStroke(Color.BLACK);
-
-            //System.out.println(Character.toString(word.charAt(i)));
-            //t =  new Text();
-            String a = Character.toString(word.charAt(i));
-            t[0].setText("a");
-            System.out.println(t[i].getText());
-            t[i].setFont(new Font(30));
-            t[i].setBoundsType(TextBoundsType.VISUAL);
-
-            pn.getChildren().addAll(r, t[i]);
-            guessedLetters.getChildren().add(pn);
-        }
-
-
-        /*Text t =  new Text();
-        t.setFont(new Font(30));
-        t.setBoundsType(TextBoundsType.VISUAL);
-        guessedLetters.getChildren().add(t)*/;
-
-        //pn.getChildren().addAll(r, t);
-        //guessedLetters.getChildren().add(pn);
-
-    }
-
     public void play() {
         disableGameButton();
         AnimationTimer timer = new AnimationTimer() {
@@ -188,7 +153,7 @@ public class HangmanController implements FileController {
             public void handle(long now) {
                 appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
                 appTemplate.getGUI().getPrimaryScene().setOnKeyTyped((KeyEvent event) -> {
-                    char guess = event.getCharacter().charAt(0);
+                    char guess = Character.toLowerCase(event.getCharacter().charAt(0));
                     if (!alreadyGuessed(guess)) {
                         boolean goodguess = false;
                         for (int i = 0; i < progress.length; i++) {
@@ -220,33 +185,103 @@ public class HangmanController implements FileController {
         timer.start();
     }
 
+    public void giveHint() {
+        hintButton.setDisable(true);
+        setGameState(GameState.INITIALIZED_MODIFIED);
+        char guess = selectAChar().charAt(0);
+        for (int i = 0; i < progress.length; i++) {
+            if (gamedata.getTargetWord().charAt(i) == guess) {
+                progress[i].setVisible(true);
+                gamedata.addGoodGuess(guess);
+                discovered++;
+            }
+        }
+
+    }
+
+    public String selectAChar(){
+        Random random = new Random();
+        String letter = null;
+        while(letter == null){
+            int index = random.nextInt(gamedata.getTargetWord().length());
+            letter = Character.toString(gamedata.getTargetWord().charAt(index));
+            if(gamedata.getGoodGuesses().contains(letter.charAt(0))) letter = null;
+        }
+
+        return letter;
+    }
+
+    private void initWordGraphics(FlowPane guessedLetters) {
+        AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
+        PropertyManager           manager    = PropertyManager.getManager();
+        char[] targetword = gamedata.getTargetWord().toCharArray();
+        progress = new Text[targetword.length];
+        for (int i = 0; i < progress.length; i++) {
+            progress[i] = new Text(Character.toString(targetword[i]));
+            progress[i].setFont(new Font(20));
+            progress[i].setVisible(false);
+        }
+        guessedLetters.getChildren().addAll(progress);
+        drawBox(guessedLetters);
+    }
+
+    private void drawLetterList(FlowPane alphabet){
+
+        for(int i=0; i<26; i++){
+            char temp = (char) ('A' + i);
+            alphabet.getChildren().add(new Button(Character.toString(temp)));
+        }
+
+    }
+
+    private void drawBox(Pane guessedLetters){
+        String word = gamedata.getTargetWord().toString();
+        System.out.println(gamedata.getTargetWord().toString());
+        StackPane pn;
+        if(progress==null) throw new NullPointerException("Error rendering graphics");
+        for(int i = 0; i< word.length(); i++){
+            pn = new StackPane();
+            pn.setPadding(new Insets(5, 5, 5, 5));
+            r = new Rectangle(25 , 25, Color.WHITE);
+            r.setStroke(Color.BLACK);
+            pn.getChildren().addAll(r, progress[i]);
+            guessedLetters.getChildren().add(pn);
+        }
+    }
+
     private void restoreGUI() {
         disableGameButton();
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
         gameWorkspace.reinitialize();
 
-        HBox guessedLetters = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
+        FlowPane guessedLetters = (FlowPane) gameWorkspace.getGameTextsPane().getChildren().get(1);
         restoreWordGraphics(guessedLetters);
 
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
         remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
-
+        hintButton = gameWorkspace.getHint();
+        gameWorkspace.getGameTextsPane().getChildren().add(hintButton);
+        hintButton.setDisable(false);
+        if(gamedata.getTargetWord().length()<8) hintButton.setVisible(false);
+        else    hintButton.setVisible(true);
         success = false;
         play();
     }
 
-    private void restoreWordGraphics(HBox guessedLetters) {
+    private void restoreWordGraphics(FlowPane guessedLetters) {
         discovered = 0;
         char[] targetword = gamedata.getTargetWord().toCharArray();
         progress = new Text[targetword.length];
         for (int i = 0; i < progress.length; i++) {
             progress[i] = new Text(Character.toString(targetword[i]));
             progress[i].setVisible(gamedata.getGoodGuesses().contains(progress[i].getText().charAt(0)));
+            progress[i].setFont(new Font(20));
             if (progress[i].isVisible())
                 discovered++;
         }
         guessedLetters.getChildren().addAll(progress);
+        drawBox(guessedLetters);
     }
 
     private boolean alreadyGuessed(char c) {
@@ -308,6 +343,7 @@ public class HangmanController implements FileController {
             load = promptToSave();
         if (load) {
             PropertyManager propertyManager = PropertyManager.getManager();
+            AppMessageDialogSingleton messageDialog   = AppMessageDialogSingleton.getSingleton();
             FileChooser     filechooser     = new FileChooser();
             Path            appDirPath      = Paths.get(propertyManager.getPropertyValue(APP_TITLE)).toAbsolutePath();
             Path            targetPath      = appDirPath.resolve(APP_WORKDIR_PATH.getParameter());
@@ -319,9 +355,14 @@ public class HangmanController implements FileController {
                                                             String.format("*.%s", extension));
             filechooser.getExtensionFilters().add(extFilter);
             File selectedFile = filechooser.showOpenDialog(appTemplate.getGUI().getWindow());
-            if (selectedFile != null && selectedFile.exists()){
+            if (selectedFile != null && selectedFile.exists()) {
                 load(selectedFile.toPath());
-                restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
+                try {
+                    restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
+                }
+                catch (NullPointerException e){
+                    messageDialog.show(propertyManager.getPropertyValue(LOAD_ERROR_TITLE), propertyManager.getPropertyValue(LOAD_ERROR_MESSAGE));
+                }
             }
         }
     }

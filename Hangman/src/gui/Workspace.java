@@ -33,11 +33,13 @@ public class Workspace extends AppWorkspaceComponent {
     ToolBar           footToolbar;       // toolbar for game buttons
     BorderPane        figurePane;        // container to display the namesake graphic of the (potentially) hanging person
     VBox              gameTextsPane;     // container to display the text-related parts of the game
-    HBox              guessedLetters;    // text area displaying all the letters guessed so far
+    FlowPane          guessedLetters;    // text area displaying all the letters guessed so far
     HBox              remainingGuessBox; // container to display the number of remaining guesses
     Button            startGame;         // the button to start playing a game of Hangman
     HangmanController controller;
-    HBox              allLetter;
+    BorderPane        layout;
+    FlowPane          allLetter;
+    Button            hint;
 
     /**
      * Constructor for initializing the workspace, note that this constructor
@@ -63,16 +65,20 @@ public class Workspace extends AppWorkspaceComponent {
         headPane.getChildren().add(guiHeadingLabel);
         headPane.setAlignment(Pos.CENTER);
 
-        allLetter = new HBox();
+        allLetter = new FlowPane();
+        for(int i = 0; i<26; i++){
+            char temp = (char) ('A' + i);
+            allLetter.getChildren().add(new Button(Character.toString(temp)));
+        }
 
 
         figurePane = new BorderPane();
-        guessedLetters = new HBox();
+        guessedLetters = new FlowPane();
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
         gameTextsPane = new VBox();
-
-        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters);
+        hint = new Button("Hint");
+        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, hint);
 
         bodyPane = new HBox();
         bodyPane.getChildren().addAll(figurePane, gameTextsPane);
@@ -84,15 +90,19 @@ public class Workspace extends AppWorkspaceComponent {
         HBox.setHgrow(blankBoxRight, Priority.ALWAYS);
         footToolbar = new ToolBar(blankBoxLeft, startGame, blankBoxRight);
 
-        allLetter = new HBox();
-        allLetter.setAlignment(Pos.CENTER_LEFT);
+        layout = new BorderPane();
+        layout.setBottom(footToolbar);
+        layout.setRight(bodyPane);
+        layout.setTop(headPane);
 
         workspace = new VBox();
-        workspace.getChildren().addAll(headPane, bodyPane, footToolbar, allLetter);
+        workspace.getChildren().add(layout);
+        VBox.setVgrow(layout, Priority.ALWAYS);
     }
 
     private void setupHandlers() {
         startGame.setOnMouseClicked(e -> controller.start());
+        hint.setOnMouseClicked(e -> controller.giveHint());
     }
 
     /**
@@ -126,7 +136,7 @@ public class Workspace extends AppWorkspaceComponent {
         return gameTextsPane;
     }
 
-    public HBox getAllLetterBox(){
+    public FlowPane getAllLetterBox(){
         return allLetter;
     }
 
@@ -138,8 +148,12 @@ public class Workspace extends AppWorkspaceComponent {
         return startGame;
     }
 
+    public Button getHint(){
+        return hint;
+    }
+
     public void reinitialize() {
-        guessedLetters = new HBox();
+        guessedLetters = new FlowPane();
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
         gameTextsPane = new VBox();
