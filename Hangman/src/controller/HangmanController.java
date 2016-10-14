@@ -6,9 +6,11 @@ import gui.Workspace;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -110,6 +112,7 @@ public class HangmanController implements FileController {
         FlowPane alphabet = gameWorkspace.getAllLetterBox();
         hintButton = gameWorkspace.getHint();
         hintButton.setDisable(false);
+        gamedata.setHintState(false);
         gameWorkspace.getGameTextsPane().getChildren().add(hintButton);
         if(gamedata.getTargetWord().length()<8) hintButton.setVisible(false);
         else    hintButton.setVisible(true);
@@ -130,8 +133,6 @@ public class HangmanController implements FileController {
             PropertyManager           manager    = PropertyManager.getManager();
             AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
             String                    endMessage = manager.getPropertyValue(success ? GAME_WON_MESSAGE : GAME_LOST_MESSAGE);
-            /*if (!success)
-                endMessage += String.format(" (the word was \"%s\")", gamedata.getTargetWord());*/
             if (dialog.isShowing())
                 dialog.toFront();
             else
@@ -172,6 +173,10 @@ public class HangmanController implements FileController {
                     }
                     setGameState(GameState.INITIALIZED_MODIFIED);
                 });
+                appTemplate.getWorkspaceComponent().getWorkspace().setOnMouseClicked((MouseEvent event) -> {
+                    gamedata.reduceRemainingGuess();
+                    System.out.println("hello");
+                });
                 if (gamedata.getRemainingGuesses() <= 0 || success)
                     stop();
             }
@@ -187,6 +192,7 @@ public class HangmanController implements FileController {
 
     public void giveHint() {
         hintButton.setDisable(true);
+        gamedata.setHintState(true);
         setGameState(GameState.INITIALIZED_MODIFIED);
         char guess = selectAChar().charAt(0);
         for (int i = 0; i < progress.length; i++) {
@@ -196,7 +202,7 @@ public class HangmanController implements FileController {
                 discovered++;
             }
         }
-
+        gamedata.reduceRemainingGuess();
     }
 
     public String selectAChar(){
@@ -262,9 +268,18 @@ public class HangmanController implements FileController {
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
         hintButton = gameWorkspace.getHint();
         gameWorkspace.getGameTextsPane().getChildren().add(hintButton);
-        hintButton.setDisable(false);
-        if(gamedata.getTargetWord().length()<8) hintButton.setVisible(false);
-        else    hintButton.setVisible(true);
+        if(gamedata.getHintIsUsed()) {
+            hintButton.setDisable(true);
+            hintButton.setVisible(true);
+        }
+        else if(gamedata.getTargetWord().length()>gamedata.HINT_THRESHOLD){
+            hintButton.setDisable(false);
+            hintButton.setVisible(true);
+        }
+        else{
+            hintButton.setDisable(true);
+            hintButton.setVisible(false);
+        }
         success = false;
         play();
     }
@@ -440,4 +455,6 @@ public class HangmanController implements FileController {
         gameworkspace.reinitialize();
         gamedata = (GameData) appTemplate.getDataComponent();
     }
+
+
 }

@@ -96,13 +96,13 @@ public class Workspace extends AppWorkspaceComponent {
         layout.setTop(headPane);
 
         workspace = new VBox();
-        workspace.getChildren().add(layout);
+        workspace.getChildren().addAll(layout);
         VBox.setVgrow(layout, Priority.ALWAYS);
     }
 
     private void setupHandlers() {
         startGame.setOnMouseClicked(e -> controller.start());
-        hint.setOnMouseClicked(e -> controller.giveHint());
+        //hint.setOnMouseClicked(e -> controller.giveHint());
     }
 
     /**

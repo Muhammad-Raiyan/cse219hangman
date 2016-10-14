@@ -21,12 +21,14 @@ public class GameData implements AppDataComponent {
 
     public static final  int TOTAL_NUMBER_OF_GUESSES_ALLOWED = 10;
     private static final int TOTAL_NUMBER_OF_STORED_WORDS    = 330622;
+    public static final int HINT_THRESHOLD                  = 8;
 
     private String         targetWord;
     private Set<Character> goodGuesses;
     private Set<Character> badGuesses;
     private int            remainingGuesses;
     public  AppTemplate    appTemplate;
+    private  boolean        hintState;
 
     public GameData(AppTemplate appTemplate) {
         this(appTemplate, false);
@@ -46,6 +48,7 @@ public class GameData implements AppDataComponent {
 
     public void init() {
         this.targetWord = setTargetWord();
+        initHintState();
         this.goodGuesses = new HashSet<>();
         this.badGuesses = new HashSet<>();
         this.remainingGuesses = TOTAL_NUMBER_OF_GUESSES_ALLOWED;
@@ -54,6 +57,7 @@ public class GameData implements AppDataComponent {
     @Override
     public void reset() {
         this.targetWord = null;
+        hintState = false;
         this.goodGuesses = new HashSet<>();
         this.badGuesses = new HashSet<>();
         this.remainingGuesses = TOTAL_NUMBER_OF_GUESSES_ALLOWED;
@@ -117,5 +121,20 @@ public class GameData implements AppDataComponent {
         }
     }
 
+    public void reduceRemainingGuess(){
+        remainingGuesses--;
+    }
 
+    public void initHintState(){
+        if(targetWord.length()> HINT_THRESHOLD)
+            hintState = true;
+        else hintState = false;
+    }
+    public boolean getHintIsUsed(){
+        return hintState;
+    }
+
+    public void setHintState(boolean state){
+        this.hintState = state;
+    }
 }
