@@ -6,11 +6,9 @@ import gui.Workspace;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -106,7 +104,6 @@ public class HangmanController implements FileController {
         discovered = 0;
 
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
-
         gamedata.init();
         setGameState(GameState.INITIALIZED_UNMODIFIED);
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
@@ -128,6 +125,7 @@ public class HangmanController implements FileController {
     private void end() {
         appTemplate.getGUI().getPrimaryScene().setOnKeyTyped(null);
         gameButton.setDisable(true);
+        hintButton.setDisable(true);
         setGameState(GameState.ENDED);
         fillOutEmptyBoxes();
         appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
@@ -151,6 +149,7 @@ public class HangmanController implements FileController {
     }
     public void play() {
         disableGameButton();
+        Workspace gameWorkspace =  (Workspace) appTemplate.getWorkspaceComponent();
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -167,17 +166,17 @@ public class HangmanController implements FileController {
                                 discovered++;
                             }
                         }
-                        if (!goodguess)
+                        if (!goodguess) {
                             gamedata.addBadGuess(guess);
+                                Workspace word = (Workspace) appTemplate.getWorkspaceComponent();
+                                word.drawHangman(10-gamedata.getRemainingGuesses());
+
+                        }
 
                         success = (discovered == progress.length);
                         remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
                     }
                     setGameState(GameState.INITIALIZED_MODIFIED);
-                });
-                appTemplate.getWorkspaceComponent().getWorkspace().setOnMouseClicked((MouseEvent event) -> {
-                    gamedata.reduceRemainingGuess();
-                    System.out.println("hello");
                 });
                 if (gamedata.getRemainingGuesses() <= 0 || success)
                     stop();
@@ -210,7 +209,7 @@ public class HangmanController implements FileController {
                 discovered++;
             }
         }
-        gamedata.reduceRemainingGuess();
+        //gamedata.reduceRemainingGuess();
     }
 
     public String selectAChar(){
@@ -253,7 +252,6 @@ public class HangmanController implements FileController {
             char temp = (char) ('A' + i);
             alphabet.getChildren().add(new Button(Character.toString(temp)));
         }
-
     }
 
     private void drawBox(Pane guessedLetters){
@@ -275,7 +273,6 @@ public class HangmanController implements FileController {
         disableGameButton();
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
         gameWorkspace.reinitialize();
-
         FlowPane guessedLetters = (FlowPane) gameWorkspace.getGameTextsPane().getChildren().get(1);
         restoreWordGraphics(guessedLetters);
 
@@ -297,6 +294,12 @@ public class HangmanController implements FileController {
             hintButton.setVisible(false);
         }
         success = false;
+        int left = gamedata.getBadGuesses().size();
+        gameWorkspace.clearHangman();
+        while(left!=0){
+            gameWorkspace.drawHangman(left);
+            left--;
+        }
         play();
     }
 
@@ -324,6 +327,7 @@ public class HangmanController implements FileController {
         AppMessageDialogSingleton messageDialog   = AppMessageDialogSingleton.getSingleton();
         PropertyManager           propertyManager = PropertyManager.getManager();
         boolean                   makenew         = true;
+        Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
         if (gamestate.equals(GameState.INITIALIZED_MODIFIED))
             try {
                 makenew = promptToSave();
@@ -337,11 +341,12 @@ public class HangmanController implements FileController {
             workFile = null;                                       // new workspace has never been saved to a file
             ((Workspace) appTemplate.getWorkspaceComponent()).reinitialize();
             enableGameButton();
+            gameWorkspace.clearHangman();
         }
         if (gamestate.equals(GameState.ENDED)) {
             appTemplate.getGUI().updateWorkspaceToolbar(false);
-            Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
             gameWorkspace.reinitialize();
+            gameWorkspace.clearHangman();
         }
 
     }

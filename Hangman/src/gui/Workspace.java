@@ -45,6 +45,8 @@ public class Workspace extends AppWorkspaceComponent {
     BorderPane        layout;
     FlowPane          allLetter;
     Button            hint;
+    private Canvas canvas;
+    private GraphicsContext gc;
 
     /**
      * Constructor for initializing the workspace, note that this constructor
@@ -65,6 +67,8 @@ public class Workspace extends AppWorkspaceComponent {
     private void layoutGUI() {
         PropertyManager propertyManager = PropertyManager.getManager();
         guiHeadingLabel = new Label(propertyManager.getPropertyValue(WORKSPACE_HEADING_LABEL));
+        canvas = new Canvas(550, 600);
+        gc = canvas.getGraphicsContext2D();
 
         headPane = new HBox();
         headPane.getChildren().add(guiHeadingLabel);
@@ -89,13 +93,14 @@ public class Workspace extends AppWorkspaceComponent {
         /*bodyPane = new HBox();
         bodyPane.getChildren().addAll(gameTextsPane);
         */
-        drawHangman();
+        //drawHangman();
         startGame = new Button("Start Playing");
         HBox blankBoxLeft  = new HBox();
         HBox blankBoxRight = new HBox();
         HBox.setHgrow(blankBoxLeft, Priority.ALWAYS);
         HBox.setHgrow(blankBoxRight, Priority.ALWAYS);
         footToolbar = new ToolBar(blankBoxLeft, startGame, blankBoxRight);
+        figurePane.setLeft(canvas);
 
         layout = new BorderPane();
         layout.setBottom(footToolbar);
@@ -108,15 +113,32 @@ public class Workspace extends AppWorkspaceComponent {
         VBox.setVgrow(layout, Priority.ALWAYS);
     }
 
-    private void drawHangman(){
-        Canvas canvas = new Canvas(550, 600);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setFill(Color.GREEN);
+    public void drawHangman(int i){
         gc.setStroke(Color.BLUE);
         gc.setLineWidth(5);
-        gc.strokeLine(40, 10, 10, 40);
-        Rectangle r = new Rectangle(550, 600);
-        figurePane.setLeft(canvas);
+        switch(--i){
+            case 0:
+                gc.strokeLine(50, 450, 450, 450);   break;       //base
+            case 1:
+                gc.strokeLine(50, 50, 50, 450);     break;       //wall
+            case 2:
+                gc.strokeLine(50, 50, 400, 50);     break;       //roof
+            case 3:
+                gc.strokeLine(305, 50, 305, 120);   break;       //rope
+            case 4:
+                gc.strokeOval(275, 120, 70, 70);    break;        //head
+            case 5:
+                gc.strokeLine(310, 190, 310, 280);  break;        //body
+            case 6:
+                gc.strokeLine(310, 200, 280, 240);  break;      //left hand
+            case 7:
+                gc.strokeLine(310, 200, 340, 240);  break;     //right hand
+            case 8:
+                gc.strokeLine(310, 280, 270, 330);  break;       //left leg
+            case 9:
+                gc.strokeLine(310, 280, 350, 330);  break;      //right leg
+
+        }
     }
 
     private void setupHandlers() {
@@ -171,6 +193,9 @@ public class Workspace extends AppWorkspaceComponent {
         return hint;
     }
 
+    public void clearHangman(){
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+    }
     public void reinitialize() {
         guessedLetters = new FlowPane();
         guessedLetters.setStyle("-fx-background-color: transparent;");
