@@ -101,13 +101,13 @@ public class Workspace extends AppWorkspaceComponent {
         figurePane.setLeft(canvas);
 
         layout = new BorderPane();
-        layout.setBottom(footToolbar);
+        //layout.setBottom(footToolbar);
         layout.setRight(gameTextsPane);
         layout.setLeft(figurePane);
-        layout.setTop(headPane);
+        //layout.setTop(headPane);
 
         workspace = new VBox();
-        workspace.getChildren().addAll(layout);
+        workspace.getChildren().addAll(headPane, footToolbar, layout);
         VBox.setVgrow(layout, Priority.ALWAYS);
     }
 
