@@ -3,13 +3,16 @@ package data;
 import apptemplate.AppTemplate;
 import components.AppDataComponent;
 import controller.GameError;
+import ui.AppMessageDialogSingleton;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -70,16 +73,35 @@ public class GameData implements AppDataComponent {
     private String setTargetWord() {
         URL wordsResource = getClass().getClassLoader().getResource("words/words.txt");
         assert wordsResource != null;
+        String word = null;
+        while(word == null){
+            int toSkip = new Random().nextInt(TOTAL_NUMBER_OF_STORED_WORDS);
+            try (Stream<String> lines = Files.lines(Paths.get(wordsResource.toURI()))) {
+                word =  lines.skip(toSkip).findFirst().get();
+                if(word.contains("\'")) word = null;
+            } catch (IOException | URISyntaxException e) {
+                e.printStackTrace();
+                System.exit(1);
+            } catch(NoSuchElementException e){
+                AppMessageDialogSingleton dialogSingleton = AppMessageDialogSingleton.getSingleton();
+                dialogSingleton.show("ERROR","Unable to load initial target word.");
+                break;
 
-        int toSkip = new Random().nextInt(TOTAL_NUMBER_OF_STORED_WORDS);
+            }
+        }
+        if(word == null){
+            System.exit(0);
+        }
+        return word;
+        /*int toSkip = new Random().nextInt(TOTAL_NUMBER_OF_STORED_WORDS);
         try (Stream<String> lines = Files.lines(Paths.get(wordsResource.toURI()))) {
             return lines.skip(toSkip).findFirst().get();
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
             System.exit(1);
-        }
+        }*/
 
-        throw new GameError("Unable to load initial target word.");
+        //throw new GameError("Unable to load initial target word.");
     }
 
     public GameData setTargetWord(String targetWord) {
@@ -120,8 +142,8 @@ public class GameData implements AppDataComponent {
         }
     }
 
-    public void setRemainingGuess(int num){
-        remainingGuesses = num;
+    public void reduceRemainingGuess(){
+        --this.remainingGuesses;
     }
 
     public boolean getHintIsUsed(){

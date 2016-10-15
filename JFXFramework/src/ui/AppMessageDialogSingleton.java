@@ -26,6 +26,7 @@ public class AppMessageDialogSingleton extends Stage {
     private static AppMessageDialogSingleton singleton = null;
     
     private Label messageLabel;
+    public Button closeButton;
 
     private AppMessageDialogSingleton() { }
     
@@ -56,7 +57,7 @@ public class AppMessageDialogSingleton extends Stage {
         // LABEL TO DISPLAY THE CUSTOM MESSAGE
         messageLabel = new Label();
 
-        Button closeButton = new Button(InitializationParameters.CLOSE_LABEL.getParameter());
+        closeButton = new Button(InitializationParameters.CLOSE_LABEL.getParameter());
         closeButton.setOnAction(e -> this.close());
 
         VBox messagePane = new VBox();
@@ -82,5 +83,11 @@ public class AppMessageDialogSingleton extends Stage {
         setTitle(title); // set the dialog title
         setMessageLabel(message); // message displayed to the user
         showAndWait(); // opens the dialog, and waits for the user to resolve using one of the given choices
+    }
+
+    public boolean buttonPressed(){
+        if(closeButton.isPressed())
+            return true;
+        return false;
     }
 }
