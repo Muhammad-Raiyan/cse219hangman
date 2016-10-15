@@ -86,8 +86,6 @@ public class AppMessageDialogSingleton extends Stage {
     }
 
     public boolean buttonPressed(){
-        if(closeButton.isPressed())
-            return true;
-        return false;
+        return closeButton.isPressed();
     }
 }

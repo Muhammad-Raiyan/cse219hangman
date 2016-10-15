@@ -9,7 +9,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="JFXFramework" />
-    <orderEntry type="module" module-name="XMLUtils" />
     <orderEntry type="library" name="lib" level="project" />
   </component>
 </module>

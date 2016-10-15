@@ -10,7 +10,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -25,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -140,20 +142,7 @@ public class HangmanController implements FileController {
                 dialog.show(manager.getPropertyValue(GAME_OVER_TITLE), endMessage);
         });
     }
-    public void fillOutEmptyBoxes(){
-        for (int i = 0; i < progress.length; i++) {
-            if(!progress[i].isVisible()) {
-                progress[i].setVisible(true);
-                progress[i].setFill(Color.RED);
-            }
-        }
-    }
 
-    public void whitenBox(char c){
-        StackPane temp = (StackPane) alphabet.getChildren().get(c-'a');
-        Rectangle r = (Rectangle) temp.getChildren().get(0);
-        r.setFill(Color.WHITE);
-    }
     public void play() {
         disableGameButton();
         Workspace gameWorkspace =  (Workspace) appTemplate.getWorkspaceComponent();
@@ -165,7 +154,7 @@ public class HangmanController implements FileController {
                     char guess = Character.toLowerCase(event.getCharacter().charAt(0));
                     if (!alreadyGuessed(guess) && isValid(guess)) {
                         boolean goodguess = false;
-                        whitenBox(guess);
+                        useBox(guess);
                         for (int i = 0; i < progress.length; i++) {
                             if (gamedata.getTargetWord().charAt(i) == guess) {
                                 progress[i].setVisible(true);
@@ -177,7 +166,9 @@ public class HangmanController implements FileController {
                         if (!goodguess) {
                             gamedata.addBadGuess(guess);
                             gameWorkspace.drawHangman(10-gamedata.getRemainingGuesses());
-
+                            if(gamedata.getRemainingGuesses()==1){
+                                hintButton.setDisable(true);
+                            }
                         }
 
                         success = (discovered == progress.length);
@@ -186,7 +177,8 @@ public class HangmanController implements FileController {
                     setGameState(GameState.INITIALIZED_MODIFIED);
                 });
                 gameWorkspace.getHint().setOnMouseClicked((MouseEvent event) ->{
-                    whitenBox(giveHint());
+                    useBox(giveHint());
+                    success = (discovered == progress.length);
                     remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
                     gameWorkspace.drawHangman(10-gamedata.getRemainingGuesses());
                 });
@@ -204,12 +196,10 @@ public class HangmanController implements FileController {
     }
 
     public boolean isValid(char c){
-        if(c >= 'a' && c<='z')
-            return true;
-        else return false;
+        return c >= 'a' && c <= 'z';
     }
 
-    public synchronized char giveHint() {
+    public char giveHint() {
         hintButton.setDisable(true);
         gamedata.setHintState(true);
         setGameState(GameState.INITIALIZED_MODIFIED);
@@ -217,11 +207,12 @@ public class HangmanController implements FileController {
         for (int i = 0; i < progress.length; i++) {
             if (gamedata.getTargetWord().charAt(i) == guess) {
                 progress[i].setVisible(true);
-                gamedata.addGoodGuess(guess);
                 discovered++;
             }
         }
-        gamedata.reduceRemainingGuess();
+        gamedata.addBadGuess(guess);
+        gamedata.addGoodGuess(guess);
+        //gamedata.reduceRemainingGuess();
         return guess;
     }
 
@@ -243,11 +234,9 @@ public class HangmanController implements FileController {
         for(Character c: test){
             word.add(c);
         }
-        return word.size()>gamedata.HINT_THRESHOLD? true:false;
+        return word.size() > GameData.HINT_THRESHOLD;
     }
     private void initWordGraphics(FlowPane guessedLetters) {
-        AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
-        PropertyManager           manager    = PropertyManager.getManager();
         char[] targetword = gamedata.getTargetWord().toCharArray();
         progress = new Text[targetword.length];
         for (int i = 0; i < progress.length; i++) {
@@ -259,28 +248,48 @@ public class HangmanController implements FileController {
         drawBox(guessedLetters);
     }
 
+    public void fillOutEmptyBoxes(){
+        for (Text progres : progress) {
+            if (!progres.isVisible()) {
+                progres.setVisible(true);
+                progres.setFill(Color.RED);
+            }
+        }
+    }
+
+    public void useBox(char c){
+        StackPane temp = (StackPane) alphabet.getChildren().get(c-'a');
+        Rectangle r = (Rectangle) temp.getChildren().get(0);
+        Text t = (Text) temp.getChildren().get(1);
+        t.setFill(Color.WHITE);
+        r.setFill(Color.BLUE);
+    }
+
     private void drawLetterList(FlowPane alphabet){
         StackPane allLetter;
         for(int i = 0; i<26; i++){
             allLetter = new StackPane();
             String temp =  Character.toString((char) ('A' + i));
-            Rectangle r = new Rectangle(25, 25, Color.GREEN);
+            Rectangle r = new Rectangle(50, 50, Color.YELLOW);
+            Text t = new Text(temp);
+            t.setFont(new Font(20));
+            t.setFill(Color.BROWN);
             r.setStroke(Color.BLACK);
-            allLetter.getChildren().addAll(r, new Text(temp));
+            allLetter.getChildren().addAll(r, t);
             alphabet.getChildren().add(allLetter);
         }
     }
 
     private void drawBox(Pane guessedLetters){
-        String word = gamedata.getTargetWord().toString();
-        System.out.println(gamedata.getTargetWord().toString());
+        String word = gamedata.getTargetWord();
+        System.out.println(gamedata.getTargetWord());
         StackPane pn;
         Rectangle r;
         if(progress==null) throw new NullPointerException("Error rendering graphics");
         for(int i = 0; i< word.length(); i++){
             pn = new StackPane();
             pn.setPadding(new Insets(5, 5, 5, 5));
-            r = new Rectangle(25 , 25, Color.WHITE);
+            r = new Rectangle(30 , 30, Color.WHITE);
             r.setStroke(Color.BLACK);
             pn.getChildren().addAll(r, progress[i]);
             guessedLetters.getChildren().add(pn);
@@ -298,7 +307,7 @@ public class HangmanController implements FileController {
         remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
         hintButton = gameWorkspace.getHint();
-        if(gamedata.getHintIsUsed()) {
+        if(gamedata.getHintIsUsed() || gamedata.getRemainingGuesses()==1) {
             hintButton.setDisable(true);
             hintButton.setVisible(true);
         }
@@ -306,7 +315,7 @@ public class HangmanController implements FileController {
             hintButton.setDisable(false);
             hintButton.setVisible(true);
         }
-        else{
+        else {
             hintButton.setDisable(true);
             hintButton.setVisible(false);
         }
@@ -317,9 +326,22 @@ public class HangmanController implements FileController {
             gameWorkspace.drawHangman(left);
             left--;
         }
+        alphabet = (FlowPane) gameWorkspace.getGameTextsPane().getChildren().get(3);
+        alphabet.setPadding(new Insets(10));
+        drawLetterList(alphabet);
+        reflect();
         play();
     }
-
+    private void reflect(){
+        HashSet<Character> good = (HashSet<Character>) gamedata.getGoodGuesses();
+        HashSet<Character> bad = (HashSet<Character>) gamedata.getBadGuesses();
+        for(Character it : good){
+            useBox(it);
+        }
+        for(Character it: bad){
+            useBox(it);
+        }
+    }
     private void restoreWordGraphics(FlowPane guessedLetters) {
         discovered = 0;
         char[] targetword = gamedata.getTargetWord().toCharArray();

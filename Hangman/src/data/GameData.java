@@ -2,14 +2,12 @@ package data;
 
 import apptemplate.AppTemplate;
 import components.AppDataComponent;
-import controller.GameError;
 import ui.AppMessageDialogSingleton;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
@@ -78,7 +76,7 @@ public class GameData implements AppDataComponent {
             int toSkip = new Random().nextInt(TOTAL_NUMBER_OF_STORED_WORDS);
             try (Stream<String> lines = Files.lines(Paths.get(wordsResource.toURI()))) {
                 word =  lines.skip(toSkip).findFirst().get();
-                if(word.contains("\'")) word = null;
+                if(!word.chars().allMatch(Character::isLetter)) word = null;
             } catch (IOException | URISyntaxException e) {
                 e.printStackTrace();
                 System.exit(1);

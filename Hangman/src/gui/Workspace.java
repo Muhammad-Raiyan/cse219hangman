@@ -13,8 +13,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
 import propertymanager.PropertyManager;
 import ui.AppGUI;
 
@@ -89,7 +87,7 @@ public class Workspace extends AppWorkspaceComponent {
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
         gameTextsPane = new VBox();
-        hint = new Button("Hint");
+        hint = new Button("HINT");
         gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, hint, bodyPane);
 
         startGame = new Button("Start Playing");
@@ -201,7 +199,7 @@ public class Workspace extends AppWorkspaceComponent {
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
         bodyPane = new FlowPane();
-        hint = new Button("Hint");
+        hint = new Button("HINT");
         hint.setVisible(false);
         gameTextsPane = new VBox();
         gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, hint, bodyPane);
