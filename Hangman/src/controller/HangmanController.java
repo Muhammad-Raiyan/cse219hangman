@@ -282,7 +282,7 @@ public class HangmanController implements FileController {
 
     private void drawBox(Pane guessedLetters){
         String word = gamedata.getTargetWord();
-        System.out.println(gamedata.getTargetWord());
+        //System.out.println(gamedata.getTargetWord());
         StackPane pn;
         Rectangle r;
         if(progress==null) throw new NullPointerException("Error rendering graphics");
@@ -431,8 +431,8 @@ public class HangmanController implements FileController {
             filechooser.getExtensionFilters().add(extFilter);
             File selectedFile = filechooser.showOpenDialog(appTemplate.getGUI().getWindow());
             if (selectedFile != null && selectedFile.exists()) {
-                load(selectedFile.toPath());
                 try {
+                    load(selectedFile.toPath());
                     restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
                 }
                 catch (NullPointerException e){
@@ -499,8 +499,12 @@ public class HangmanController implements FileController {
      */
     private void load(Path source) throws IOException {
         // load game data
-        appTemplate.getFileComponent().loadData(appTemplate.getDataComponent(), source);
+        try {
+            appTemplate.getFileComponent().loadData(appTemplate.getDataComponent(), source);
+        }
+        catch(IOException e){
 
+        }
         // set the work file as the file from which the game was loaded
         workFile = source;
 
